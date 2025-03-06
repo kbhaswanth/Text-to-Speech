@@ -2,7 +2,6 @@ import streamlit as st
 from googletrans import Translator, LANGUAGES
 from gtts import gTTS
 import os
-import asyncio
 
 # Streamlit app configuration
 st.title("Language Translator & Text-to-Speech")
@@ -23,22 +22,21 @@ if st.button("Translate"):
     output_lang_code = [k for k, v in LANGUAGES.items() if v == output_lang][0]
 
     try:
-        # Translate text
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        translated = loop.run_until_complete(translator.translate(text_to_translate, src=input_lang_code, dest=output_lang_code))
+        # Translate text (No asyncio needed)
+        translated = translator.translate(text_to_translate, src=input_lang_code, dest=output_lang_code)
         translated_text = translated.text
         st.success(f"Translation: {translated_text}")
 
         # Generate speech for the translated text
         tts = gTTS(text=translated_text, lang=output_lang_code)
-        tts.save("translated_audio.mp3")
+        audio_file = "translated_audio.mp3"
+        tts.save(audio_file)
 
         # Provide download link and playback
-        st.audio("translated_audio.mp3", format="audio/mp3")
+        st.audio(audio_file, format="audio/mp3")
 
-        # Clean up file
-        os.remove("translated_audio.mp3")
+        # Clean up file (optional, but better to do this outside Streamlit's execution cycle)
+        os.remove(audio_file)
     except Exception as e:
         st.error(f"Translation failed: {e}")
 
